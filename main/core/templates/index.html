@@ -12,17 +12,41 @@
   </head>
   <body>
     <div class="container mt-4">
+      <div class="container">
+        <ul class="nav nav-pills">
 
-      <ul class="nav nav-pills">
-        <li class="nav-item">
-          {% url 'home' as url_home %}
-          <a class="nav-link {% if url_home == request.path %}active{% endif %}" href="{{url_home}}">Главная</a>
-        </li>
-        <li class="nav-item">
-          {% url 'edit_page' as url_edit_page %}
-          <a class="nav-link {% if url_edit_page == request.path %}active{% endif %}" href="{{url_edit_page}}">Создание/ред/удал</a>
-        </li>
-       </ul>
+            <li class="nav-item">
+              {% url 'home' as url_home %}
+              <a class="nav-link {% if url_home == request.path %}active{% endif %}" href="{{url_home}}">Главная</a>
+            </li>
+            <li class="nav-item">
+              {% url 'edit_page' as url_edit_page %}
+              <a class="nav-link {% if url_edit_page == request.path %}active{% endif %}" href="{{url_edit_page}}">Создание/ред/удал</a>
+            </li>
+            {% if not request.user.is_authenticated %}
+            <li class="nav-item">
+              {% url 'login_page' as url_login_page %}
+              <a class="nav-link {% if url_login_page == request.path %}active{% endif %}" href="{{url_login_page}}">Авторизация</a>
+            </li>
+            <li class="nav-item">
+              {% url 'register_page' as url_register_page %}
+              <a class="nav-link {% if url_register_page == request.path %}active{% endif %}" href="{{url_register_page}}">Регистрация</a>
+            </li>
+
+          {{request.user}}
+        {% else %}
+          {{request.user}}
+          <div class="ml-auto">
+            <li class="nav-item mr-1">
+              {% url 'logout_page' as url_logout_page %}
+              <a class="nav-link btn btn-outline-danger" href="{{url_logout_page}}">Выйти</a>
+            </li>
+          </div>
+
+
+        {% endif %}
+        </ul>
+      </div>
 
       {% block content %}
 
