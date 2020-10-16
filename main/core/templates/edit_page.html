@@ -55,10 +55,17 @@
             {% for i in list_articles %}
                 <tr {% if i.id|slugify == request.GET.id %} style="background:#d4edda" {% endif %}>
                     <th>{{i.id}}</th>
-                    <td>{{i.create_date}}</td>
+                    <td>{{i.create_date|date:"d.m.Y"}} - {{ i.author }}</td>
                     <td>{{i.name}}</td>
-                    <td><a href="{{ i.get_absolute_url_to_update_page }}">редактировать</a></td>
                     <td>
+                        {% if i.author == request.user %}
+                        <a href="{{ i.get_absolute_url_to_update_page }}">редактировать</a>
+                        {% else %}
+                        нет доступа
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if i.author == request.user %}
                         <form id="delete_form_{{i.id}}" action="{{ i.get_absolute_url_to_delete_page }}" method="post">
                             {% csrf_token %}
                         </form>
@@ -70,6 +77,9 @@
                                 }
                             }
                         </script>
+                        {% else %}
+                        нет доступа
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}

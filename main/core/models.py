@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 # Create your models here.
@@ -5,6 +6,7 @@ from django.urls import reverse
 
 
 class Articles(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Владелец статьи", blank=True, null=True)
     create_date = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=200, verbose_name='Название')
     text = models.TextField(verbose_name='Текст')

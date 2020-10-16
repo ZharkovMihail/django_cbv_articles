@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 
 # Create your views here.
@@ -38,20 +40,27 @@ class CustomSuccessMixin:
         return '%s?id=%s' % (self.success_url, self.object.id)
 
 
-class ArticleCreateView(CustomSuccessMixin, CreateView):
+class ArticleCreateView(LoginRequiredMixin, CustomSuccessMixin, CreateView):
     model = Articles
     slug_field = "url"
     form_class = ArticleForm
     template_name = 'edit_page.html'
     success_url = reverse_lazy('edit_page')
     success_msg = "Запись добавлена"
+    # login_url = 'login_page'
 
     def get_context_data(self, **kwargs):
         kwargs['list_articles'] = Articles.objects.all().order_by('-id')
         return super().get_context_data(**kwargs)
 
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.author = self.request.user
+        self.object.save()
+        return super().form_valid(form)
 
-class ArticleUpdateView(CustomSuccessMixin, UpdateView):
+
+class ArticleUpdateView(LoginRequiredMixin, CustomSuccessMixin, UpdateView):
     model = Articles
     slug_field = "url"
     form_class = ArticleForm
@@ -63,8 +72,16 @@ class ArticleUpdateView(CustomSuccessMixin, UpdateView):
         kwargs['update'] = True
         return super().get_context_data(**kwargs)
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if self.request.user != kwargs['instance'].author:
+            return self.handle_no_permission()
+        if hasattr(self, 'object'):
+            kwargs.update({'instance': self.object})
+        return kwargs
 
-class ArticleDeleteView(DeleteView):
+
+class ArticleDeleteView(LoginRequiredMixin, DeleteView):
     model = Articles
     slug_field = "url"
     template_name = 'edit_page.html'
@@ -74,6 +91,14 @@ class ArticleDeleteView(DeleteView):
     def post(self, request, *args, **kwargs):
         messages.success(self.request, self.success_msg)
         return super().post(request)
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.request.user != self.object.author:
+            return self.handle_no_permission()
+        success_url = self.get_success_url()
+        self.object.delete()
+        return HttpResponseRedirect(success_url)
 
 
 class MyLoginView(LoginView):
